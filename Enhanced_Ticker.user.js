@@ -1005,7 +1005,7 @@ function AddTickerPost(post){
 	if(store) $('#eticker_history').prepend( final_html );
 
 	if(post_id){
-		if( is_post ) localStorage.setItem("ETicker_LastPost", thread_id + "." + post_id);
+		if( is_post ) localStorage.setItem("ETicker_LastPost", JSON.stringify( { t: thread_id, p: post_id, u: username, d: dt.getTime(), i: userid } ) );
 		if( is_ban ) localStorage.setItem("ETicker_UpdatePost", thread_id + "." + post_id);
 	}
 	
