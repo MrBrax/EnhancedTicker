@@ -7,9 +7,15 @@
 // @include     https://facepunch.com/showthread.php?*
 // @include     https://facepunch.com/subscription.php*
 // @include     https://facepunch.com/usercp.php*
-// @version     0.15
+// @include		https://facepunch.com/fp_read.php*
+// @version     0.2
 // @grant       GM_addStyle
+// @grant		GM_setValue
+// @grant		GM_getValue
 // ==/UserScript==
+
+//GM_setValue("ETicker_UnreadPosts", "{}");
+if( ! GM_getValue("ETicker_UnreadPosts") ) GM_setValue("ETicker_UnreadPosts", "{}");
 
 function timeSince(date) {
 
@@ -53,7 +59,7 @@ if( thread ){
 		if(s[1] != s[2]){
 			var au_info = document.createElement("div");
 			au_info.className = "au_bar";
-			au_info.innerHTML = "<strong>Auto updater not running, go to the last page.</strong>";
+			au_info.innerHTML = "<strong>[ETAUT " + GM_info.script.version + "] Auto updater not running, go to the last page.</strong>";
 			plist.appendChild(au_info);
 			return;
 		}
@@ -68,7 +74,7 @@ if( thread ){
 
 	var au_info = document.createElement("div");
 	au_info.className = "au_bar";
-	au_info.innerHTML = "<strong>New posts will appear below if ticker is open</strong>";
+	au_info.innerHTML = "<strong>[ETAUT " + GM_info.script.version + "] New posts will appear below if ticker is open</strong>";
 	plist.appendChild(au_info);
 
 	function updateTime(a){
@@ -133,6 +139,12 @@ if( thread ){
 
 						// update title
 						if( is_new ){
+
+							var unread_data = JSON.parse( GM_getValue("ETicker_UnreadPosts") );
+							if(!unread_data[ d[0] ]) unread_data[ d[0] ] = {};
+							unread_data[ d[0] ][ d[1] ] = 1;
+							GM_setValue("ETicker_UnreadPosts", JSON.stringify(unread_data));
+
 							unseenPosts[ d[1] ] = true;
 							document.title = "[" + ( Object.keys(unseenPosts).length ) + "] " + title;
 						}
@@ -155,17 +167,48 @@ if( thread ){
 		for(i in unseenPosts){
 			var element = document.getElementById("post_" + i);
 			if( !element ){ console.log("no element for post " + i); continue; }
-			//console.log( i, element.getBoundingClientRect().top );
 	  		if( element.getBoundingClientRect().top < 0 ) {
 	  			console.log("Post now seen: " + i);
 				delete unseenPosts[ i ];
 				element.className = element.className.replace("postbitnew", "postbitold");
 				document.title = "[" + ( Object.keys(unseenPosts).length ) + "] " + title;
+
+				var unread_data = JSON.parse( GM_getValue("ETicker_UnreadPosts") );
+				if( unread_data[ thread[1] ] && unread_data[ thread[1] ][ i ] ) delete unread_data[ thread[1] ][ i ];
+				GM_setValue("ETicker_UnreadPosts", JSON.stringify(unread_data));
 			}
 		}
 	}
 
 	window.addEventListener("storage", storageHandler, false);
 	window.addEventListener('scroll', scrollHandler, false);
+
+}else if( location.href.match(/usercp\.php/) || location.href.match(/subscription\.php/) || location.href.match(/fp_read\.php/) ){
+
+	console.log( "Unread posts", JSON.parse( GM_getValue("ETicker_UnreadPosts") ) );
+
+	var unread_data = JSON.parse( GM_getValue("ETicker_UnreadPosts") );
+
+	for( i in unread_data ){
+
+		var num = Object.keys(unread_data[i]).length;
+
+		if(num == 0) continue;
+
+		var a = document.getElementById("thread_title_" + i);
+
+		if(a){
+			var title = a.parentNode;
+			var npb = document.createElement("a");
+			npb.className = "newposts";
+			npb.id = "unread_" + i;
+			npb.href = "/showthread.php?t=" + i + "&p=" + Object.keys(unread_data[i])[0] + "#post" + Object.keys(unread_data[i])[0];
+			npb.innerHTML = '<img src="/fp/newpost.gif"> ' + ( Object.keys(unread_data[i]).length ) + ' unread posts';
+			title.appendChild(npb);
+			var tr = document.getElementById("thread_" + i);
+			tr.className = tr.className.replace("old ", "new ");
+		}
+
+	}
 
 }
