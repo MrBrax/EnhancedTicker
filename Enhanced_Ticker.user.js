@@ -1005,8 +1005,8 @@ function AddTickerPost(post){
 	if(store) $('#eticker_history').prepend( final_html );
 
 	if(post_id > -1){
-		if( is_post ) localStorage.setItem("ETicker_LastPost", JSON.stringify( { t: thread_id, p: post_id, u: username, d: dt.getTime(), i: userid } ) );
-		if( is_ban ) localStorage.setItem("ETicker_UpdatePost", thread_id + "." + post_id);
+		if( is_post ) localStorage.setItem("ETicker_LastPost", JSON.stringify( { t: thread_id, p: post_id, u: username, d: dt.getTime(), i: userid, b: is_ban } ) );
+		//if( is_ban ) localStorage.setItem("ETicker_UpdatePost", thread_id + "." + post_id);
 	}
 	
 	// gmf stuff, don't ask, don't tell. it does not steal your passwords, it's something completely different. edit it out if you're paranoid still

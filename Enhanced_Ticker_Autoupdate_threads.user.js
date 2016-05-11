@@ -78,7 +78,16 @@ if( thread ){
 	if( unread_data[ parseInt(thread[1]) ] ){
 		unseenPosts = unread_data[ parseInt(thread[1]) ];
 		newposts = Object.keys(unseenPosts).length;
+
+		var first_post = document.querySelector("#posts li:first-child");
+		if(first_post){
+			first_post = first_post.id.replace("post_", "");
+			for(i in unread_data[ parseInt(thread[1]) ] ){
+				if(first_post > i){ console.log("Clean up old post: " + i); delete unread_data[ parseInt(thread[1]) ][ i ]; }
+			}
+		}
 	}
+
 
 	document.title = "[" + newposts + "] " + title;
 
@@ -101,13 +110,13 @@ if( thread ){
 
 			var d = JSON.parse(e.newValue);
 
-			//console.log( "PostJSON", d );
+			if(d.b) is_new = false;
 
 			if(d.t == thread[1]){
 
 				var post_exist = document.getElementById("post_" + d.p );
 
-				if( post_exist && e.key == "ETicker_LastPost" ){
+				if( post_exist && !d.b ){
 					console.log("Post already exists: " + d.p );
 					return;
 				}
