@@ -8,13 +8,12 @@
 // @include     https://facepunch.com/subscription.php*
 // @include     https://facepunch.com/usercp.php*
 // @include		https://facepunch.com/fp_read.php*
-// @version     0.2
+// @version     0.21
 // @grant       GM_addStyle
 // @grant		GM_setValue
 // @grant		GM_getValue
 // ==/UserScript==
 
-//GM_setValue("ETicker_UnreadPosts", "{}");
 if( ! GM_getValue("ETicker_UnreadPosts") ) GM_setValue("ETicker_UnreadPosts", "{}");
 
 function timeSince(date) {
@@ -69,6 +68,12 @@ if( thread ){
 	var newposts = 0;
 
 	var unseenPosts = {};
+
+	var unread_data = JSON.parse( GM_getValue("ETicker_UnreadPosts") );
+	if( unread_data[ parseInt(thread[1]) ] ){
+		unseenPosts = unread_data[ parseInt(thread[1]) ];
+		newposts = Object.keys(unseenPosts).length;
+	}
 
 	document.title = "[" + newposts + "] " + title;
 
