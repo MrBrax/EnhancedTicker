@@ -8,7 +8,8 @@
 // @include     https://facepunch.com/subscription.php*
 // @include     https://facepunch.com/usercp.php*
 // @include		https://facepunch.com/fp_read.php*
-// @version     0.22
+// @include		https://facepunch.com/fp_popular.php*
+// @version     0.23
 // @grant       GM_addStyle
 // @grant		GM_setValue
 // @grant		GM_getValue
@@ -202,7 +203,7 @@ if( thread ){
 	window.addEventListener("storage", storageHandler, false);
 	window.addEventListener('scroll', scrollHandler, false);
 
-}else if( location.href.match(/usercp\.php/) || location.href.match(/subscription\.php/) || location.href.match(/fp_read\.php/) ){
+}else if( location.href.match(/(usercp|subscription|fp_read|popular)\.php/) ){
 
 	console.log( "Unread posts", JSON.parse( GM_getValue("ETicker_UnreadPosts") ) );
 
@@ -215,7 +216,7 @@ if( thread ){
 	}
 	console.log("Visible threads", visible_threads);
 
-
+	/*
 	function applyUnread( auto ){
 
 		console.log("Apply unread thread info", auto);
@@ -265,31 +266,75 @@ if( thread ){
 	}
 
 	applyUnread(true);
+	*/
+
+	function incRefresh(){
+		var unread_data = JSON.parse( GM_getValue("ETicker_UnreadPosts") );
+		for(var i = 0; i < unread_data.length; ++i ){
+			updateThread(i, unread_data[i]);
+		}
+
+		setTimeout(incRefresh, 10000);
+	}
+	
+
+	function updateThread(id, d){
+		var unread_data = JSON.parse( GM_getValue("ETicker_UnreadPosts") );
+
+		console.log("updateThread", location.href, id, d);
+
+		// go through all threads on page and find all instances
+		var tr = document.querySelectorAll(".threadbit");
+		for(var i = 0; i < tr.length; ++i){
+			if( parseInt( tr[i].id.replace("thread_", "") ) != id ) continue;
+			//if(!unread_data[ id ] ) continue;
+
+			//tr[i].className = tr[i].className.replace("au_flash", "");
+
+			tr[i].className = tr[i].className.replace("old ", "new ");
+
+			if(unread_data[ id ]){
+				var num = Object.keys( unread_data[ id ] ).length;
+				var npb = tr[i].querySelector(".au_unread"); // unread post box
+				if( num == 0 ){
+					if(npb) npb.parentNode.removeChild(npb);
+					//if(!gotonew) tr.className = tr.className.replace("new ", "old ");
+				}else{
+					if(!npb){
+						npb = document.createElement("a");
+						npb.className = "newposts au_unread";
+						npb.href = "/showthread.php?t=" + i + "&p=" + Object.keys(unread_data[ id ])[0] + "#post" + Object.keys(unread_data[ id ])[0];
+						npb.innerHTML = '<img src="/fp/newpost.gif"> ' + ( num ) + ' unread posts';
+						tr[i].querySelector(".threadtitle").appendChild(npb);
+					}else{
+						npb.href = "/showthread.php?t=" + i + "&p=" + Object.keys(unread_data[ id ])[0] + "#post" + Object.keys(unread_data[ id ])[0];
+						npb.innerHTML = '<img src="/fp/newpost.gif"> ' + ( num ) + ' unread posts';
+					}
+				}
+			}
+
+			// set new poster & date
+			var p_time = tr[i].querySelector(".threadlastpost dl dd:nth-child(2)");
+			var p_by = tr[i].querySelector(".threadlastpost dl dd:nth-child(3)");
+			p_time.setAttribute("data-timesince", d.d);
+			p_time.innerHTML = timeSince( d.d ) + " Ago";
+			p_time.style.color = '#5F9F61';
+			p_by.innerHTML = 'by <a href="member.php?u=' + d.i + '">' + d.u + '</a> <a href="showthread.php?t=' + id + '&amp;p=' + d.p + '#post' + d.p + '" class="lastpostdate understate" title="Go to last post"><img title="Go to last post" src="fp/vb/buttons/lastpost.gif" alt="Go to last post"></a>';
+			
+			console.log("Update thread info", d.t, p_time, p_by);
+		}
+	}
 
 	var storageHandler = function (e) {
 		if( e.key == "ETicker_LastPost" ){
 			var d = JSON.parse(e.newValue);
 			console.log("Receive new post outside thread: " + d.p + " in thread " + d.t);
-			if( visible_threads[ d.t ] ) setTimeout(applyUnread, 500);
-
-			// go through all threads on page and find all instances
-			var tr = document.querySelectorAll(".threadbit");
-			for(var i = 0; i < tr.length; ++i){
-				if( parseInt( tr[i].id.replace("thread_", "") ) != d.t ) continue;
-
-				tr[i].className = tr[i].className + " au_flash";
-
-				// set new poster & date
-				var p_time = tr[i].querySelector(".threadlastpost dl dd:nth-child(2)");
-				var p_by = tr[i].querySelector(".threadlastpost dl dd:nth-child(3)");
-				p_time.setAttribute("data-timesince", d.d);
-				p_time.innerHTML = timeSince( d.d ) + " Ago";
-				p_by.innerHTML = 'by <a href="member.php?u=' + d.i + '">' + d.u + '</a> <a href="showthread.php?t=' + d.t + '&amp;p=' + d.p + '#post' + d.p + '" class="lastpostdate understate" title="Go to last post"><img title="Go to last post" src="fp/vb/buttons/lastpost.gif" alt="Go to last post"></a>';
-				
-				console.log("Update thread info", d.t, p_time, p_by);
-			}
+			//if( visible_threads[ d.t ] ) setTimeout(applyUnread, 500);
+			updateThread( d.t, d );
 		}
 	}
+
+	incRefresh();
 
 	window.addEventListener("storage", storageHandler, false);
 
