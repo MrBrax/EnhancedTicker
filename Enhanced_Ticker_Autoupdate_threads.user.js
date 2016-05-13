@@ -10,10 +10,11 @@
 // @include		https://facepunch.com/fp_read.php*
 // @include		https://facepunch.com/fp_popular.php*
 // @include		https://facepunch.com/forumdisplay.php*
-// @version     0.27
+// @version     0.29
 // @grant       GM_addStyle
 // ==/UserScript==
 
+UnreadPosts = {}
 if(!localStorage.getItem("ETicker_UnreadPosts") ){
 	console.log("[AU] No UnreadPosts JSON");
 	localStorage.setItem("ETicker_UnreadPosts", "{}");
@@ -21,6 +22,23 @@ if(!localStorage.getItem("ETicker_UnreadPosts") ){
 if(!JSON.parse(localStorage.getItem("ETicker_UnreadPosts"))){
 	console.log("[AU] Corrupted UnreadPosts JSON");
 	localStorage.setItem("ETicker_UnreadPosts", "{}");
+}
+
+UnreadPosts = JSON.parse(localStorage.getItem("ETicker_UnreadPosts"));
+
+window.addEventListener("storage", function(e){
+	if( e.key == "ETicker_UnreadPosts" ){
+		UnreadPosts = JSON.parse(e.newValue);
+	}
+}, false);
+
+for(i in UnreadPosts){
+	if( Object.keys(UnreadPosts[i]).length > 50 ){
+		for(var n = 0; n < Object.keys(UnreadPosts[i]).length - 50; n++){
+			console.log( i, "too long (" + Object.keys(UnreadPosts[i]).length + "), remove one" );
+			delete UnreadPosts[i][ Object.keys(UnreadPosts[i])[n] ];
+		}
+	}
 }
 
 cfg = window.localStorage.getItem("ETickerConfig");
@@ -56,20 +74,8 @@ function timeSince(date) {
     return Math.floor(seconds) + " second" + ( seconds != 1 ? "s" : "");
 }
 
-function newPost( data ){
-	var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
-	if(!unread_data[ data.t ]) unread_data[ data.t ] = {};
-	if( unread_data[ data.t ][ data.p ] ) return;
-	unread_data[ data.t ][ data.p ] = {
-		i: data.i, // userid
-		u: data.u, // username
-		d: data.d  // timestamp
-	};
-	localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
-}
 
 GM_addStyle(".au_bar { background: #cce; border: 1px solid #777; border-bottom-width: 0; clear: both; display: block; font: 12px Tahoma; padding: 4px; width: 100%; box-sizing: border-box; }");
-
 GM_addStyle("@keyframes auflash { 0% { background-color: #A9BEE2; } 100% { background-color: #fff; } }");
 GM_addStyle(".au_flash { animation: 10s auflash; }");
 GM_addStyle(".au_unread { background: #D1D4F6 !important; }");
@@ -100,18 +106,15 @@ if( thread ){
 	var title = document.title;
 	var newposts = 0;
 
-	//var unseenPosts = {};
-
-	var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
-	if( unread_data[ parseInt(thread[1]) ] ){
-		//unseenPosts = unread_data[ parseInt(thread[1]) ];
-		newposts = Object.keys( unread_data[ parseInt( thread[1] ) ] ).length;
+	if( UnreadPosts[ parseInt(thread[1]) ] ){
+		//unseenPosts = UnreadPosts[ parseInt(thread[1]) ];
+		newposts = Object.keys( UnreadPosts[ parseInt( thread[1] ) ] ).length;
 
 		var first_post = document.querySelector("#posts li:first-child");
 		if(first_post){
 			first_post = first_post.id.replace("post_", "");
-			for(i in unread_data[ parseInt(thread[1]) ] ){
-				if(first_post > i){ console.log("Clean up old post: " + i); delete unread_data[ parseInt(thread[1]) ][ i ]; }
+			for(i in UnreadPosts[ parseInt(thread[1]) ] ){
+				if(first_post > i){ console.log("Clean up old post: " + i); delete UnreadPosts[ parseInt(thread[1]) ][ i ]; }
 			}
 		}
 	}
@@ -236,25 +239,25 @@ if( thread ){
 
 		}
 
-		var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
+		//var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
 
-		if(!unread_data[ thread[1] ]) return;
+		if(!UnreadPosts[ thread[1] ]) return;
 
-		for( var i in unread_data[ thread[1] ] ){
+		for( var i in UnreadPosts[ thread[1] ] ){
 			var element = document.getElementById("post_" + i);
 			if( !element ){ 
 				console.log("no element for post " + i + ", delete");				
-				if( unread_data[ thread[1] ][ i ] ) delete unread_data[ thread[1] ][ i ];
-				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
+				if( UnreadPosts[ thread[1] ][ i ] ) delete UnreadPosts[ thread[1] ][ i ];
+				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(UnreadPosts));
 				continue;
 			}
 	  		if( element.getBoundingClientRect().top < 0 ) {
 	  			console.log("Post now seen: " + i);
 				//delete unseenPosts[ i ];
 				element.className = element.className.replace("postbitnew", "postbitold");
-				if( unread_data[ thread[1] ][ i ] ) delete unread_data[ thread[1] ][ i ];
-				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
-				newposts = Object.keys(unread_data[ thread[1] ]).length;
+				if( UnreadPosts[ thread[1] ][ i ] ) delete UnreadPosts[ thread[1] ][ i ];
+				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(UnreadPosts));
+				newposts = Object.keys(UnreadPosts[ thread[1] ]).length;
 				document.title = "[" + newposts + "] " + title;
 			}
 		}
@@ -264,7 +267,7 @@ if( thread ){
 
 }else if( threadlist_page ){
 
-	console.log( "[AU-" + threadlist_page[1] + "] Load: Unread posts", JSON.parse( localStorage.getItem("ETicker_UnreadPosts") ) );
+	//console.log( "[AU-" + threadlist_page[1] + "] Load: Unread posts", JSON.parse( localStorage.getItem("ETicker_UnreadPosts") ) );
 
 	var visible_threads = {}
 
@@ -273,13 +276,13 @@ if( thread ){
 		if(!t[i].id) continue;
 		visible_threads[ parseInt( t[i].id.replace("thread_title_", "") ) ] = true;
 	}
-	console.log("[AU-" + threadlist_page[1] + "] Load: Visible threads", visible_threads);
+	//console.log("[AU-" + threadlist_page[1] + "] Load: Visible threads", visible_threads);
 
 	function updateThread(id){
 		
-		var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") )[id];
+		//var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") )[id];
 
-		if(!unread_data){
+		if( !UnreadPosts[id] ){
 			console.log( "[AU-" + threadlist_page[1] + "] No data for thread: " + id);
 			return;
 		}
@@ -297,42 +300,42 @@ if( thread ){
 
 			var thread_name = tr[i].querySelector("a.title").innerHTML;
 
-			var num = Object.keys( unread_data ).length;
+			var num = Object.keys( UnreadPosts[id] ).length;
 			var npb = tr[i].querySelector(".au_unread"); // unread post box
 			if( num == 0 ){
 				if(npb) npb.style.display = "none";
 
-				var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
-				delete unread_data[id];
-				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
+				//var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
+				delete UnreadPosts[id];
+				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(UnreadPosts));
 
 			}else{
 
 				if(!npb){
 					npb = document.createElement("a");
 					npb.className = "newposts au_unread";
-					npb.href = "/showthread.php?t=" + id + "&p=" + Object.keys(unread_data)[0] + "#post" + Object.keys(unread_data)[0];
+					npb.href = "/showthread.php?t=" + id + "&p=" + Object.keys( UnreadPosts[id] )[0] + "#post" + Object.keys( UnreadPosts[id] )[0];
 					npb.innerHTML = '<img src="/fp/newpost.gif"> ' + ( num ) + ' unread posts';
 					npb.style.display = "inline-block";
 					tr[i].querySelector(".threadtitle").appendChild(npb);
 				}else{
 					npb.style.display = "inline-block";
-					npb.href = "/showthread.php?t=" + id + "&p=" + Object.keys(unread_data)[0] + "#post" + Object.keys(unread_data)[0];
+					npb.href = "/showthread.php?t=" + id + "&p=" + Object.keys( UnreadPosts[id] )[0] + "#post" + Object.keys( UnreadPosts[id] )[0];
 					npb.innerHTML = '<img src="/fp/newpost.gif"> ' + ( num ) + ' unread posts';
 				}
 
-				var last_post = Object.keys( unread_data )[ Object.keys( unread_data ).length - 1 ];
-				var d = unread_data[ last_post ];
+				var last_post = Object.keys( UnreadPosts[ id ] )[ Object.keys( UnreadPosts[ id ] ).length - 1 ];
+				var d = UnreadPosts[ id ][ last_post ];
 
 				if(!d){
-					console.log("thread no last post", unread_data, last_post, d);
+					console.log("thread no last post", UnreadPosts[ id ], last_post, d);
 				}
 
 				if( typeof d == "number"){
 					console.log("old thread info format", id);
-					var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
-					delete unread_data[id][last_post];
-					localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
+					//var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
+					delete UnreadPosts[id][last_post];
+					localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(UnreadPosts));
 					continue;
 				}
 
@@ -370,13 +373,12 @@ if( thread ){
 
 	// update if something was missed
 	function incRefresh(){
-		var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
-		if(!unread_data){
-			console.error("[AU] Invalid UnreadPosts data", unread_data, unread_data.length);
+		if(!UnreadPosts){
+			console.error("[AU] Invalid UnreadPosts data", UnreadPosts, UnreadPosts.length);
 			return;
 		}
-		console.log( "[AU-" + threadlist_page[1] + "] Auto update thread list (" + Object.keys(unread_data).length + " entries)");
-		for( var i in unread_data ){
+		console.log( "[AU-" + threadlist_page[1] + "] Auto update thread list (" + Object.keys(UnreadPosts).length + " entries)");
+		for( var i in UnreadPosts ){
 			if(!visible_threads[i]) continue;
 			updateThread(i);
 		}
@@ -447,7 +449,7 @@ if( thread ){
 					npb.style.display = "inline-block";
 				}
 
-				if(threadlist_page != "fp_read"){
+				if(threadlist_page[1] != "fp_read"){
 					// place at top
 					var first_thread = document.querySelector(".threadbit.sticky");
 					if(!first_thread){
@@ -467,6 +469,8 @@ if( thread ){
 			console.log("[AU-" + threadlist_page[1] + "] Receive read post from thread: " + d.p + " in thread " + d.t);
 
 			if(readPostCache[d.p]) return;
+
+			var tr = document.querySelectorAll(".threadbit");
 
 			for(var i = 0; i < tr.length; ++i){
 				if(!tr[i].id) continue;
