@@ -19,3 +19,5 @@ Updates threads automatically, as long as you have the ticker open. Requires the
 - Keeps track of unread posts
 - Updates ratings & ban status on new posts
 - Only fetches data when it needs to
+- Updates forum lists & popular/read/usercp etc in realtime
+- Updates timestamps in realtime

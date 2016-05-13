@@ -10,7 +10,7 @@
 // @include		https://facepunch.com/fp_read.php*
 // @include		https://facepunch.com/fp_popular.php*
 // @include		https://facepunch.com/forumdisplay.php*
-// @version     0.25
+// @version     0.27
 // @grant       GM_addStyle
 // ==/UserScript==
 
@@ -72,7 +72,7 @@ GM_addStyle(".au_bar { background: #cce; border: 1px solid #777; border-bottom-w
 
 GM_addStyle("@keyframes auflash { 0% { background-color: #A9BEE2; } 100% { background-color: #fff; } }");
 GM_addStyle(".au_flash { animation: 10s auflash; }");
-GM_addStyle(".au_unread { background: #D1D4F6; }");
+GM_addStyle(".au_unread { background: #D1D4F6 !important; }");
 
 var thread = location.href.match(/\?t=([0-9]+)/);
 
@@ -244,7 +244,7 @@ if( thread ){
 			var element = document.getElementById("post_" + i);
 			if( !element ){ 
 				console.log("no element for post " + i + ", delete");				
-				if( unread_data[ thread[1] ] && unread_data[ thread[1] ][ i ] ) delete unread_data[ thread[1] ][ i ];
+				if( unread_data[ thread[1] ][ i ] ) delete unread_data[ thread[1] ][ i ];
 				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
 				continue;
 			}
@@ -252,10 +252,10 @@ if( thread ){
 	  			console.log("Post now seen: " + i);
 				//delete unseenPosts[ i ];
 				element.className = element.className.replace("postbitnew", "postbitold");
-				document.title = "[" + ( Object.keys(unread_data[ thread[1] ][ i ]).length ) + "] " + title;
-
-				if( unread_data[ thread[1] ] && unread_data[ thread[1] ][ i ] ) delete unread_data[ thread[1] ][ i ];
+				if( unread_data[ thread[1] ][ i ] ) delete unread_data[ thread[1] ][ i ];
 				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
+				newposts = Object.keys(unread_data[ thread[1] ]).length;
+				document.title = "[" + newposts + "] " + title;
 			}
 		}
 	}
@@ -387,18 +387,10 @@ if( thread ){
 	var readPostCache = {};
 	var firstPost = {};
 
-	var tr = document.querySelectorAll(".threadbit");
-	var first_thread = document.querySelector(".threadbit.sticky");
-	if(!first_thread){
-		first_thread = tr[0];
-	}else{
-		first_thread = first_thread.nextSibling;
-	}
-
-	console.log("first thread", first_thread.querySelector("a.title").innerHTML);
-
 	var storageHandler = function (e) {
 		if( e.key == "ETicker_LastPost" ){ // handle new posts (from ticker)
+
+			var tr = document.querySelectorAll(".threadbit");
 
 			var d = JSON.parse(e.newValue);
 
@@ -455,9 +447,17 @@ if( thread ){
 					npb.style.display = "inline-block";
 				}
 
-				// place at top
+				if(threadlist_page != "fp_read"){
+					// place at top
+					var first_thread = document.querySelector(".threadbit.sticky");
+					if(!first_thread){
+						first_thread = tr[0];
+					}else{
+						first_thread = first_thread.nextSibling;
+					}
 
-				tr[i].parentNode.insertBefore(tr[i], first_thread);
+					tr[i].parentNode.insertBefore(tr[i], first_thread);
+				}
 
 			}
 
