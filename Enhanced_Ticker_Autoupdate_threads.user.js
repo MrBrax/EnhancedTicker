@@ -389,7 +389,11 @@ if( thread ){
 
 	var tr = document.querySelectorAll(".threadbit");
 	var first_thread = document.querySelector(".threadbit.sticky");
-	if(!first_thread) first_thread = tr[0];
+	if(!first_thread){
+		first_thread = tr[0];
+	}else{
+		first_thread = first_thread.nextSibling;
+	}
 
 	console.log("first thread", first_thread.querySelector("a.title").innerHTML);
 
@@ -453,7 +457,7 @@ if( thread ){
 
 				// place at top
 
-				tr[i].parentNode.insertBefore(tr[i], first_thread.nextSibling);
+				tr[i].parentNode.insertBefore(tr[i], first_thread);
 
 			}
 
