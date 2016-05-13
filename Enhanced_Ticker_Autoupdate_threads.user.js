@@ -10,7 +10,7 @@
 // @include		https://facepunch.com/fp_read.php*
 // @include		https://facepunch.com/fp_popular.php*
 // @include		https://facepunch.com/forumdisplay.php*
-// @version     0.24
+// @version     0.25
 // @grant       GM_addStyle
 // ==/UserScript==
 
@@ -295,6 +295,8 @@ if( thread ){
 		for(var i = 0; i < tr.length; ++i){
 			if( parseInt( tr[i].id.replace("thread_", "") ) != id ) continue;
 
+			var thread_name = tr[i].querySelector("a.title").innerHTML;
+
 			var num = Object.keys( unread_data ).length;
 			var npb = tr[i].querySelector(".au_unread"); // unread post box
 			if( num == 0 ){
@@ -340,7 +342,7 @@ if( thread ){
 
 				var old_post = p_by.innerHTML.match(/\&amp;p=([0-9]+)/);
 				if(old_post && old_post[1] != last_post && p_time.style.color != '#5F9F61'){
-					console.log( "[AU-" + threadlist_page[1] + "] Inconsistent data: " + id + ", " + last_post + " (" + old_post[1] + ")");
+					console.log( "[AU-" + threadlist_page[1] + "] Inconsistent data: " + id + " (" + thread_name + "), " + last_post + " (" + old_post[1] + ")");
 				}else{
 					p_time.setAttribute("data-timesince", d.d);
 					p_time.innerHTML = timeSince( d.d ) + " Ago";
@@ -348,15 +350,16 @@ if( thread ){
 					p_by.innerHTML = 'by <a href="member.php?u=' + d.i + '">' + d.u + '</a> <a href="showthread.php?t=' + id + '&amp;p=' + last_post + '#post' + last_post + '" class="lastpostdate understate" title="Go to last post"><img title="Go to last post" src="fp/vb/buttons/lastpost.gif" alt="Go to last post"></a>';
 				}
 
-				if( !tr[i].old_post || tr[i].old_post != last_post ){
-					console.log("flash thread", id, tr[i].old_post, last_post); 
+				if( tr[i].old_post && tr[i].old_post != last_post ){
+					//console.log("flash thread", id, tr[i].old_post, last_post); 
 					tr[i].className = tr[i].className.replace("au_flash", "");
 					tr[i].className = tr[i].className.replace("old ", "new ");
-					tr[i].old_post = last_post;
+					
 					(function(ind){
 						setTimeout( function(){ tr[ind].className = tr[ind].className + " au_flash" }, 50);
 					})(i);
 				}
+				tr[i].old_post = last_post;
 
 			}
 			
@@ -385,6 +388,10 @@ if( thread ){
 	var firstPost = {};
 
 	var tr = document.querySelectorAll(".threadbit");
+	var first_thread = document.querySelector(".threadbit.sticky");
+	if(!first_thread) first_thread = tr[0];
+
+	console.log("first thread", first_thread.querySelector("a.title").innerHTML);
 
 	var storageHandler = function (e) {
 		if( e.key == "ETicker_LastPost" ){ // handle new posts (from ticker)
@@ -412,15 +419,15 @@ if( thread ){
 				p_by.innerHTML = 'by <a href="member.php?u=' + d.i + '">' + d.u + '</a> <a href="showthread.php?t=' + d.t + '&amp;p=' + d.p + '#post' + d.p + '" class="lastpostdate understate" title="Go to last post"><img title="Go to last post" src="fp/vb/buttons/lastpost.gif" alt="Go to last post"></a>';
 				
 				// flash
-				if( !tr[i].old_post || tr[i].old_post != d.p ){
-					console.log("flash thread", d.t, tr[i].old_post, d.p); 
+				if( tr[i].old_post && tr[i].old_post != d.p ){
+					//console.log("flash thread", d.t, tr[i].old_post, d.p); 
 					tr[i].className = tr[i].className.replace("au_flash", "");
 					tr[i].className = tr[i].className.replace("old ", "new ");
-					tr[i].old_post = d.p;
 					(function(ind){
 						setTimeout( function(){ tr[ind].className = tr[ind].className + " au_flash" }, 50);
 					})(i);
 				}
+				tr[i].old_post = d.p;
 
 				// make new post box if it does not exist
 				var npb = tr[i].querySelector(".au_unread");
@@ -443,6 +450,10 @@ if( thread ){
 					npb.innerHTML = '<img src="/fp/newpost.gif"> ' + num + ' unread post' + ( num != 1 ? "s" : "");
 					npb.style.display = "inline-block";
 				}
+
+				// place at top
+
+				tr[i].parentNode.insertBefore(tr[i], first_thread.nextSibling);
 
 			}
 
