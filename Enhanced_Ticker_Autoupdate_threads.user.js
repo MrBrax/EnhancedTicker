@@ -9,7 +9,8 @@
 // @include     https://facepunch.com/usercp.php*
 // @include		https://facepunch.com/fp_read.php*
 // @include		https://facepunch.com/fp_popular.php*
-// @version     0.23
+// @include		https://facepunch.com/forumdisplay.php*
+// @version     0.24
 // @grant       GM_addStyle
 // ==/UserScript==
 
@@ -20,6 +21,11 @@ if(!localStorage.getItem("ETicker_UnreadPosts") ){
 if(!JSON.parse(localStorage.getItem("ETicker_UnreadPosts"))){
 	console.log("[AU] Corrupted UnreadPosts JSON");
 	localStorage.setItem("ETicker_UnreadPosts", "{}");
+}
+
+cfg = window.localStorage.getItem("ETickerConfig");
+if(cfg){
+	cfg = JSON.parse(cfg);
 }
 
 function timeSince(date) {
@@ -64,13 +70,13 @@ function newPost( data ){
 
 GM_addStyle(".au_bar { background: #cce; border: 1px solid #777; border-bottom-width: 0; clear: both; display: block; font: 12px Tahoma; padding: 4px; width: 100%; box-sizing: border-box; }");
 
-GM_addStyle("@keyframes auflash { 0% { background-color: #f00; } 100% { background-color: #fff; } }");
+GM_addStyle("@keyframes auflash { 0% { background-color: #A9BEE2; } 100% { background-color: #fff; } }");
 GM_addStyle(".au_flash { animation: 10s auflash; }");
 GM_addStyle(".au_unread { background: #D1D4F6; }");
 
 var thread = location.href.match(/\?t=([0-9]+)/);
 
-var threadlist_page = location.href.match(/(usercp|subscription|fp_read|popular)\.php/);
+var threadlist_page = location.href.match(/(usercp|subscription|fp_read|popular|forumdisplay)\.php/);
 
 if( thread ){
 
@@ -94,12 +100,12 @@ if( thread ){
 	var title = document.title;
 	var newposts = 0;
 
-	var unseenPosts = {};
+	//var unseenPosts = {};
 
 	var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
 	if( unread_data[ parseInt(thread[1]) ] ){
-		unseenPosts = unread_data[ parseInt(thread[1]) ];
-		newposts = Object.keys(unseenPosts).length;
+		//unseenPosts = unread_data[ parseInt(thread[1]) ];
+		newposts = Object.keys( unread_data[ parseInt( thread[1] ) ] ).length;
 
 		var first_post = document.querySelector("#posts li:first-child");
 		if(first_post){
@@ -232,7 +238,7 @@ if( thread ){
 
 		var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
 
-		if(unread_data[ thread[1] ]) return;
+		if(!unread_data[ thread[1] ]) return;
 
 		for( var i in unread_data[ thread[1] ] ){
 			var element = document.getElementById("post_" + i);
@@ -246,7 +252,7 @@ if( thread ){
 	  			console.log("Post now seen: " + i);
 				//delete unseenPosts[ i ];
 				element.className = element.className.replace("postbitnew", "postbitold");
-				document.title = "[" + ( unread_data[ thread[1] ][ i ].length ) + "] " + title;
+				document.title = "[" + ( Object.keys(unread_data[ thread[1] ][ i ]).length ) + "] " + title;
 
 				if( unread_data[ thread[1] ] && unread_data[ thread[1] ][ i ] ) delete unread_data[ thread[1] ][ i ];
 				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
@@ -263,12 +269,11 @@ if( thread ){
 	var visible_threads = {}
 
 	var t = document.querySelectorAll("a.title");
-	for( i in t ){
+	for(var i = 0; i < t.length; ++i ){
 		if(!t[i].id) continue;
 		visible_threads[ parseInt( t[i].id.replace("thread_title_", "") ) ] = true;
 	}
 	console.log("[AU-" + threadlist_page[1] + "] Load: Visible threads", visible_threads);
-
 
 	function updateThread(id){
 		
@@ -280,21 +285,15 @@ if( thread ){
 		}
 
 		if(!document.getElementById("thread_" + id)){
-			console.log( "[AU-" + threadlist_page[1] + "] Thread not found on page: " + id);
+			//console.log( "[AU-" + threadlist_page[1] + "] Thread not found on page: " + id);
 			return;
 		}
 
-		console.log( "[AU-" + threadlist_page[1] + "] Update thread list: " + id);
 
 		// go through all threads on page and find all instances
 		var tr = document.querySelectorAll(".threadbit");
 		for(var i = 0; i < tr.length; ++i){
 			if( parseInt( tr[i].id.replace("thread_", "") ) != id ) continue;
-			//if(!unread_data[ id ] ) continue;
-
-			//tr[i].className = tr[i].className.replace("au_flash", "");
-
-			tr[i].className = tr[i].className.replace("old ", "new ");
 
 			var num = Object.keys( unread_data ).length;
 			var npb = tr[i].querySelector(".au_unread"); // unread post box
@@ -306,6 +305,7 @@ if( thread ){
 				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
 
 			}else{
+
 				if(!npb){
 					npb = document.createElement("a");
 					npb.className = "newposts au_unread";
@@ -337,14 +337,30 @@ if( thread ){
 				// set new poster & date
 				var p_time = tr[i].querySelector(".threadlastpost dl dd:nth-child(2)");
 				var p_by = tr[i].querySelector(".threadlastpost dl dd:nth-child(3)");
-				p_time.setAttribute("data-timesince", d.d);
-				p_time.innerHTML = timeSince( d.d ) + " Ago";
-				p_time.style.color = '#5F9F61';
-				p_by.innerHTML = 'by <a href="member.php?u=' + d.i + '">' + d.u + '</a> <a href="showthread.php?t=' + id + '&amp;p=' + last_post + '#post' + last_post + '" class="lastpostdate understate" title="Go to last post"><img title="Go to last post" src="fp/vb/buttons/lastpost.gif" alt="Go to last post"></a>';
-				
+
+				var old_post = p_by.innerHTML.match(/\&amp;p=([0-9]+)/);
+				if(old_post && old_post[1] != last_post && p_time.style.color != '#5F9F61'){
+					console.log( "[AU-" + threadlist_page[1] + "] Inconsistent data: " + id + ", " + last_post + " (" + old_post[1] + ")");
+				}else{
+					p_time.setAttribute("data-timesince", d.d);
+					p_time.innerHTML = timeSince( d.d ) + " Ago";
+					p_time.style.color = '#5F9F61';
+					p_by.innerHTML = 'by <a href="member.php?u=' + d.i + '">' + d.u + '</a> <a href="showthread.php?t=' + id + '&amp;p=' + last_post + '#post' + last_post + '" class="lastpostdate understate" title="Go to last post"><img title="Go to last post" src="fp/vb/buttons/lastpost.gif" alt="Go to last post"></a>';
+				}
+
+				if( !tr[i].old_post || tr[i].old_post != last_post ){
+					console.log("flash thread", id, tr[i].old_post, last_post); 
+					tr[i].className = tr[i].className.replace("au_flash", "");
+					tr[i].className = tr[i].className.replace("old ", "new ");
+					tr[i].old_post = last_post;
+					(function(ind){
+						setTimeout( function(){ tr[ind].className = tr[ind].className + " au_flash" }, 50);
+					})(i);
+				}
+
 			}
 			
-			console.log( "[AU-" + threadlist_page[1] + "] Update thread td info", id, p_time, p_by);
+			//console.log( "[AU-" + threadlist_page[1] + "] Update thread td info", id, p_time, p_by);
 
 		}
 	}
@@ -358,6 +374,7 @@ if( thread ){
 		}
 		console.log( "[AU-" + threadlist_page[1] + "] Auto update thread list (" + Object.keys(unread_data).length + " entries)");
 		for( var i in unread_data ){
+			if(!visible_threads[i]) continue;
 			updateThread(i);
 		}
 
@@ -374,7 +391,7 @@ if( thread ){
 
 			var d = JSON.parse(e.newValue);
 
-			if(!d.r) return; // only misc posts
+			if(!d.r && !cfg.au_all_threads) return; // only misc posts
 
 			console.log("[AU-" + threadlist_page[1] + "] Receive new unrelated post from ticker: " + d.p + " in thread " + d.t);
 			
@@ -394,6 +411,17 @@ if( thread ){
 				p_time.style.fontWeight = '700';
 				p_by.innerHTML = 'by <a href="member.php?u=' + d.i + '">' + d.u + '</a> <a href="showthread.php?t=' + d.t + '&amp;p=' + d.p + '#post' + d.p + '" class="lastpostdate understate" title="Go to last post"><img title="Go to last post" src="fp/vb/buttons/lastpost.gif" alt="Go to last post"></a>';
 				
+				// flash
+				if( !tr[i].old_post || tr[i].old_post != d.p ){
+					console.log("flash thread", d.t, tr[i].old_post, d.p); 
+					tr[i].className = tr[i].className.replace("au_flash", "");
+					tr[i].className = tr[i].className.replace("old ", "new ");
+					tr[i].old_post = d.p;
+					(function(ind){
+						setTimeout( function(){ tr[ind].className = tr[ind].className + " au_flash" }, 50);
+					})(i);
+				}
+
 				// make new post box if it does not exist
 				var npb = tr[i].querySelector(".au_unread");
 				if(!npb){
@@ -455,17 +483,6 @@ if( thread ){
 	window.addEventListener("storage", storageHandler, false);
 
 }
-
-// add unread posts to read threads
-window.addEventListener("storage", function(e){
-	if( e.key == "ETicker_LastPost" ){ // handle new posts (from ticker)
-		var d = JSON.parse(e.newValue);
-		if(d.r){
-			console.log("[AU-" + ( threadlist ? threadlist_page[1] : thread[1] ) + "] Receive new read thread post from ticker: " + d.p + " in thread " + d.t);
-			newPost(d);
-		}
-	}
-}, false);
 
 function updateTime(){
 	var q = document.querySelectorAll("dd[data-timesince], span[data-timesince]");

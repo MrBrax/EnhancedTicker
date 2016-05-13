@@ -6,13 +6,13 @@
 // @downloadURL https://github.com/MrBrax/EnhancedTicker/raw/master/Enhanced_Ticker.user.js
 // @include     https://facepunch.com/fp_ticker.php
 // @require		https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
-// @version     3.36
+// @version     3.37
 // @grant 		GM_xmlhttpRequest
 // ==/UserScript==
 
 ETICKER = {};
 
-ETICKER.VERSION = 3.36;
+ETICKER.VERSION = 3.37;
 
 ETICKER.IMG_MAGNIFIER 	= "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAH5SURBVDjLpZK/a5NhEMe/748kRqypmqQQgz/oUPUPECpCoEVwyNStIA6COFR33boIjg6mg4uL0k0EO1RFISKImkHQxlbQRAsx0dgKJm/e53nunnOwViR5leJnuZs+973jHBHB/+D/ah7X2LXWloilyMw5YgtD3CDiBWN4Zno8bQcJHBFBucauZfsolZDCru0OfFcAAUISrLZDfPzSKxuiibOT+T6JCwDMtrQzYQvZHQ5Cw2h3GK0OI9AWBzJJZFOxgtJUGpTABQAiLu5OOviuGIEWkBUwC7pasNZj7N2ThNJUjBQY4pznAoEWsBWwxU+JFXSVRTzmQWvKRR5RG4KVGMgKrAVYflexAAugDCEygdbUCI2F7zobk7FZY76DIDQgrT9HCwwt1FsBhhIu4p4D3kiS8B0MJz28ftfGSPfl8MPLxbGBAqVpptbslJc+fEPMA7JDPrIpH3FX8LzaROdrE5O51jalgid3Lh4b6/sDALh6971riErGcFET58gwDPGndG9JT6ReHcwfPorGygu8rdxvGxMeP3XtzcofgigWZ0/EtQ7n0/sOTe0/Mo7V5WeoVu61z1yvZzZX+BsnZx9opYLpevXp7eXKIrL5UWit0n0r/Isb50bjRGreiyWmgs76lfM31y5tSQAAc6czHjONXLi13thygih+AEq4N6GqMsuhAAAAAElFTkSuQmCC";
 ETICKER.IMG_CROSS 		= "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIhSURBVDjLlZPrThNRFIWJicmJz6BWiYbIkYDEG0JbBiitDQgm0PuFXqSAtKXtpE2hNuoPTXwSnwtExd6w0pl2OtPlrphKLSXhx07OZM769qy19wwAGLhM1ddC184+d18QMzoq3lfsD3LZ7Y3XbE5DL6Atzuyilc5Ciyd7IHVfgNcDYTQ2tvDr5crn6uLSvX+Av2Lk36FFpSVENDe3OxDZu8apO5rROJDLo30+Nlvj5RnTlVNAKs1aCVFr7b4BPn6Cls21AWgEQlz2+Dl1h7IdA+i97A/geP65WhbmrnZZ0GIJpr6OqZqYAd5/gJpKox4Mg7pD2YoC2b0/54rJQuJZdm6Izcgma4TW1WZ0h+y8BfbyJMwBmSxkjw+VObNanp5h/adwGhaTXF4NWbLj9gEONyCmUZmd10pGgf1/vwcgOT3tUQE0DdicwIod2EmSbwsKE1P8QoDkcHPJ5YESjgBJkYQpIEZ2KEB51Y6y3ojvY+P8XEDN7uKS0w0ltA7QGCWHCxSWWpwyaCeLy0BkA7UXyyg8fIzDoWHeBaDN4tQdSvAVdU1Aok+nsNTipIEVnkywo/FHatVkBoIhnFisOBoZxcGtQd4B0GYJNZsDSiAEadUBCkstPtN3Avs2Msa+Dt9XfxoFSNYF/Bh9gP0bOqHLAm2WUF1YQskwrVFYPWkf3h1iXwbvqGfFPSGW9Eah8HSS9fuZDnS32f71m8KFY7xs/QZyu6TH2+2+FAAAAABJRU5ErkJggg==";
@@ -246,6 +246,8 @@ function config(){
 			cfg.supersecret = cfg.supersecret != undefined ? cfg.supersecret : "";
 			cfg.supersecret_u = cfg.supersecret_u != undefined ? cfg.supersecret_u : "";
 			cfg.supersecret_p = cfg.supersecret_p != undefined ? cfg.supersecret_p : "";
+
+			cfg.au_all_threads = cfg.au_all_threads != undefined ? cfg.au_all_threads : false;
 			
 			return cfg;
 
@@ -502,6 +504,10 @@ function eConfig(){
 	html += '<br><input type="checkbox" id="eticker_store_rating" ' + ( Config.store_rating ? "checked" : "" ) + '> Store rated posts';
 	html += '<br><input type="checkbox" id="eticker_store_mentioned" ' + ( Config.store_mentioned ? "checked" : "" ) + '> Store mentioned posts';
 	
+
+	html += '<br><input type="checkbox" id="eticker_au_all_threads" ' + ( Config.au_all_threads ? "checked" : "" ) + '> [AU] Store all threads';
+	
+
 	html += '<br><br><button class="submit">save settings</button>';
 	html += ' <button class="reset">reset settings</button>';
 	html += ' <button class="manage" onclick="cfg = prompt(\'Import/Export data here:\', JSON.stringify(Config)); if(cfg){ Config = JSON.parse(cfg); eSaveData(); location.reload(); }">import/export</button>';
@@ -764,7 +770,7 @@ function AddTickerPost(post){
 		if( hpost && Config.subforums[hpost[1]] && ETICKER.Hide ){
 			hide = true;
 			updateposts(1);
-			return false;
+			if(!Config.au_all_threads){ return false; }else{ hide = true; }
 		}
 		
 		// get username
@@ -836,7 +842,7 @@ function AddTickerPost(post){
 				if( Config.threads[thread_id] && ETICKER.Hide ){
 					hide = true;
 					updateposts(1);
-					return false;
+					if(!Config.au_all_threads) return false;
 				}
 				
 				if(subforum_id > -1 && !is_mentioned && Config.watch[thread_id]){
@@ -1007,7 +1013,21 @@ function AddTickerPost(post){
 	if(store) $('#eticker_history').prepend( final_html );
 
 	if(post_id > -1){
-		if( is_post ) localStorage.setItem("ETicker_LastPost", JSON.stringify( { t: thread_id, p: post_id, u: username, d: dt.getTime(), i: userid, b: is_ban, r: is_read } ) );
+		if( is_post ){
+			var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
+			if(!unread_data) unread_data = {};
+			if(!unread_data[ thread_id ]) unread_data[ thread_id ] = {};
+			if(!unread_data[ thread_id ][ post_id ] ){
+				unread_data[ thread_id ][ post_id ] = {
+					i: userid, // userid
+					u: username, // username
+					d: dt.getTime()  // timestamp
+				};
+				localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(unread_data));
+			}
+			unread_data = null;
+			localStorage.setItem("ETicker_LastPost", JSON.stringify( { t: thread_id, p: post_id, u: username, d: dt.getTime(), i: userid, b: is_ban, r: is_read } ) );
+		}
 		//if( is_ban ) localStorage.setItem("ETicker_UpdatePost", thread_id + "." + post_id);
 	}
 	
@@ -1159,6 +1179,8 @@ $("body").on("click", "#eticker_form button.submit", function(){
 	cfg.supersecret_p = $("#eticker_supersecret_p").val();
 
 	cfg.tickerlimit = parseInt($("#eticker_tickerlimit").val());
+
+	cfg.au_all_threads = $("#eticker_au_all_threads").is(":checked");
 	
 	Config = cfg; // live fix, lol
 	
