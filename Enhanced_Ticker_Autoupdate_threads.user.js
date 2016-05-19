@@ -10,7 +10,7 @@
 // @include		https://facepunch.com/fp_read.php*
 // @include		https://facepunch.com/fp_popular.php*
 // @include		https://facepunch.com/forumdisplay.php*
-// @version     0.29
+// @version     0.30
 // @grant       GM_addStyle
 // ==/UserScript==
 
@@ -32,14 +32,23 @@ window.addEventListener("storage", function(e){
 	}
 }, false);
 
+var over = false;
 for(i in UnreadPosts){
 	if( Object.keys(UnreadPosts[i]).length > 50 ){
 		for(var n = 0; n < Object.keys(UnreadPosts[i]).length - 50; n++){
-			console.log( i, "too long (" + Object.keys(UnreadPosts[i]).length + "), remove one" );
+			console.log( i, "too long (" + Object.keys(UnreadPosts[i]).length + "), remove " + Object.keys(UnreadPosts[i])[n] );
+			over = true;
 			delete UnreadPosts[i][ Object.keys(UnreadPosts[i])[n] ];
+			console.log( i, "no entries, remove " + i );
 		}
+	}else if( Object.keys(UnreadPosts[i]).length == 0 ){
+		over = true;
+		delete UnreadPosts[i];
 	}
 }
+
+if(over) localStorage.setItem("ETicker_UnreadPosts", JSON.stringify(UnreadPosts));
+
 
 cfg = window.localStorage.getItem("ETickerConfig");
 if(cfg){
@@ -344,7 +353,7 @@ if( thread ){
 				var p_by = tr[i].querySelector(".threadlastpost dl dd:nth-child(3)");
 
 				var old_post = p_by.innerHTML.match(/\&amp;p=([0-9]+)/);
-				if(old_post && old_post[1] != last_post && p_time.style.color != '#5F9F61'){
+				if(old_post && old_post > last_post && p_time.style.color != '#5F9F61'){
 					console.log( "[AU-" + threadlist_page[1] + "] Inconsistent data: " + id + " (" + thread_name + "), " + last_post + " (" + old_post[1] + ")");
 				}else{
 					p_time.setAttribute("data-timesince", d.d);
