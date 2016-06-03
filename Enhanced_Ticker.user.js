@@ -370,7 +370,7 @@ if(Config.supersecret && Config.supersecret != "" && Config.supersecret_u && Con
 						ETICKER.SuperSecretCache[username] = true;
 	
 						console.log("[Autoreg] Send PM...", data);
-						$.post("/private.php?do=insertpm&pmid=", { recipients: username, securitytoken: unsafeWindow.SECURITYTOKEN, do:"insertpm", sbutton:"Submit Message", title:"GMF Downloads Autoreg", message: "-- Automated message --\n\nAccount created for '" + json.hostname + "' with the username '" + json.username + "' and password '" + json.password +"'.\n\n[url=" + json.link +"]" + json.link + "[/url]" }, function(data){
+						$.post("/private.php?do=insertpm&pmid=", { savecopy: 1, recipients: username, securitytoken: unsafeWindow.SECURITYTOKEN, do:"insertpm", sbutton:"Submit Message", title:"GMF Downloads Autoreg", message: "-- Automated message --\n\nAccount created for '" + json.hostname + "' with the username '" + json.username + "' and password '" + json.password +"'.\n\n[url=" + json.link +"]" + json.link + "[/url]" }, function(data){
 							console.log("[Autoreg] Sent PM.", data);
 							not.append("<br><b>PM Sent to user with instructions.</b>");
 						}).fail(function(data){
@@ -1077,7 +1077,7 @@ function AddTickerPost(post){
 							$("#eticker_history").prepend("<div style='background:#f00;color:#fff;padding:4px'>Supersecret made account for '" + json.username + "' with password '" + json.password +"' on '" + json.hostname + "'.<br><a href='" + json.link +"' target='_blank'>" + json.link + "</a></div>");
 							ETICKER.SuperSecretCache[username] = true;
 
-							$.post("/private.php?do=insertpm&pmid=", { recipients: username, securitytoken: unsafeWindow.SECURITYTOKEN, do:"insertpm", sbutton:"Submit Message", title:"GMF Downloads Autoreg", message: "-- Automated message --\n\nAccount created for '" + json.hostname + "' with the username '" + json.username + "' and password '" + json.password +"'.\n\n[url=" + json.link +"]" + json.link + "[/url]" }, function(data){
+							$.post("/private.php?do=insertpm&pmid=", { savecopy: 1, recipients: username, securitytoken: unsafeWindow.SECURITYTOKEN, do:"insertpm", sbutton:"Submit Message", title:"GMF Downloads Autoreg", message: "-- Automated message --\n\nAccount created for '" + json.hostname + "' with the username '" + json.username + "' and password '" + json.password +"'.\n\n[url=" + json.link +"]" + json.link + "[/url]" }, function(data){
 								console.log("[Autoreg] Send PM", data);
 							});
 
