@@ -6,13 +6,13 @@
 // @downloadURL https://github.com/MrBrax/EnhancedTicker/raw/master/Enhanced_Ticker.user.js
 // @include     https://facepunch.com/fp_ticker.php
 // @require		https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js
-// @version     3.37
+// @version     4.0
 // @grant 		GM_xmlhttpRequest
 // ==/UserScript==
 
 ETICKER = {};
 
-ETICKER.VERSION = 3.37;
+ETICKER.VERSION = 4.0;
 
 ETICKER.IMG_MAGNIFIER 	= "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAH5SURBVDjLpZK/a5NhEMe/748kRqypmqQQgz/oUPUPECpCoEVwyNStIA6COFR33boIjg6mg4uL0k0EO1RFISKImkHQxlbQRAsx0dgKJm/e53nunnOwViR5leJnuZs+973jHBHB/+D/ah7X2LXWloilyMw5YgtD3CDiBWN4Zno8bQcJHBFBucauZfsolZDCru0OfFcAAUISrLZDfPzSKxuiibOT+T6JCwDMtrQzYQvZHQ5Cw2h3GK0OI9AWBzJJZFOxgtJUGpTABQAiLu5OOviuGIEWkBUwC7pasNZj7N2ThNJUjBQY4pznAoEWsBWwxU+JFXSVRTzmQWvKRR5RG4KVGMgKrAVYflexAAugDCEygdbUCI2F7zobk7FZY76DIDQgrT9HCwwt1FsBhhIu4p4D3kiS8B0MJz28ftfGSPfl8MPLxbGBAqVpptbslJc+fEPMA7JDPrIpH3FX8LzaROdrE5O51jalgid3Lh4b6/sDALh6971riErGcFET58gwDPGndG9JT6ReHcwfPorGygu8rdxvGxMeP3XtzcofgigWZ0/EtQ7n0/sOTe0/Mo7V5WeoVu61z1yvZzZX+BsnZx9opYLpevXp7eXKIrL5UWit0n0r/Isb50bjRGreiyWmgs76lfM31y5tSQAAc6czHjONXLi13thygih+AEq4N6GqMsuhAAAAAElFTkSuQmCC";
 ETICKER.IMG_CROSS 		= "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIhSURBVDjLlZPrThNRFIWJicmJz6BWiYbIkYDEG0JbBiitDQgm0PuFXqSAtKXtpE2hNuoPTXwSnwtExd6w0pl2OtPlrphKLSXhx07OZM769qy19wwAGLhM1ddC184+d18QMzoq3lfsD3LZ7Y3XbE5DL6Atzuyilc5Ciyd7IHVfgNcDYTQ2tvDr5crn6uLSvX+Av2Lk36FFpSVENDe3OxDZu8apO5rROJDLo30+Nlvj5RnTlVNAKs1aCVFr7b4BPn6Cls21AWgEQlz2+Dl1h7IdA+i97A/geP65WhbmrnZZ0GIJpr6OqZqYAd5/gJpKox4Mg7pD2YoC2b0/54rJQuJZdm6Izcgma4TW1WZ0h+y8BfbyJMwBmSxkjw+VObNanp5h/adwGhaTXF4NWbLj9gEONyCmUZmd10pGgf1/vwcgOT3tUQE0DdicwIod2EmSbwsKE1P8QoDkcHPJ5YESjgBJkYQpIEZ2KEB51Y6y3ojvY+P8XEDN7uKS0w0ltA7QGCWHCxSWWpwyaCeLy0BkA7UXyyg8fIzDoWHeBaDN4tQdSvAVdU1Aok+nsNTipIEVnkywo/FHatVkBoIhnFisOBoZxcGtQd4B0GYJNZsDSiAEadUBCkstPtN3Avs2Msa+Dt9XfxoFSNYF/Bh9gP0bOqHLAm2WUF1YQskwrVFYPWkf3h1iXwbvqGfFPSGW9Eah8HSS9fuZDnS32f71m8KFY7xs/QZyu6TH2+2+FAAAAABJRU5ErkJggg==";
@@ -23,6 +23,8 @@ ETICKER.IMG_ERROR 		= "https://facepunch.com/fp/ratings/cross.png";
 ETICKER.IMG_COMPLETE 	= "https://facepunch.com/fp/ratings/tick.png";
 
 ETICKER.Hide = true;
+
+ETICKER.FirstLoad = true;
 
 ETICKER.BanCounter = [];
 
@@ -395,6 +397,11 @@ if(Config.supersecret && Config.supersecret != "" && Config.supersecret_u && Con
 
 function eNotify(text, link){
 
+	if(ETICKER.FirstLoad){
+		console.log("[ETicker] First load notify: " + text);
+		return;
+	}
+
 	console.log("[ETicker] Notify: " + text);
 
 	if( ETICKER.LOADED + 5000 > Date.now() ){ return; }
@@ -579,7 +586,7 @@ function eBans(m, a, b){
 var is_dark_theme = Config.darkmode && Config.darkmode == true; //= $("#logo a").css("margin-left") != "0px";
 
 // add styles
-var st =	'.ticker_item  			{ clear:both; overflow:hidden; height:28px; white-space:nowrap } ' +
+var st =	'.ticker_item  			{ clear:both; overflow:hidden; display: flex; align-items: center; white-space:nowrap } ' +
 			'.ticker_item:hover 	{ background-color: ' + ( is_dark_theme ? "#181818" : "#eee" ) + '; }' +
 			'.ticker_item a 		{ font-size: 12px !important; ' + ( is_dark_theme ? "color: #ECECEC;" : "" ) + ' } ' +
 			'.ticker_item a:hover 	{ ' + ( is_dark_theme ? "color: #FFF !important;" : "" ) + ' } ' +
@@ -588,17 +595,25 @@ var st =	'.ticker_item  			{ clear:both; overflow:hidden; height:28px; white-spa
 			'.eticker_forumlink a:visited { ' + ( is_dark_theme ? "color: #AAE !important;" : "" ) + ' } ' +
 			'.ticker_item div > a:visited { ' + ( is_dark_theme ? "color: #AAE !important;" : "" ) + ' } ' +
 
-			'.ticker_item > div { padding:0px !important; } ' +
+
 			'.eticker_forumlink { padding:4px; } ' +
 			'.eticker_forumlink a { ' + ( is_dark_theme ? "color: #ccc;" : "" ) + ' } ' +
-			'.eticker_threadlink { display:inline-block; max-width:64%; overflow:hidden; height:20px } ' +
-			'.eticker_threadlink a { display:inline-block; width:200%; vertical-align:-14px } ' +
+
+			'.fullspan { display: flex; align-items: center; padding: 4px; } ' +
+			'.fullspan * { margin: 0 3px; } ' +
+
+			'.ticker_item.lastread { background-color: #DAD9F9; } ' +
+
+			'.ticker_last_read { margin-left: 10px; } ' +
+
+			'.eticker_time { margin-right: 5px; padding: 4px; line-height:1 !important; font-weight: 700; font-size: 90%; } ' +
+			'.eticker_userinfo { padding: 4px; width: 12%; display: flex; align-items: center; } ' +
+			'.eticker_postbuttons { margin-right: 5px; padding: 4px; } ' +
+			'.eticker_threadlink { flex-grow: 1; padding: 4px; } ' +
+			'.eticker_subforum { text-align: right; padding: 4px; font-weight: 700; } ' +
 			
-			'.eticker_event img, .eticker_rating img { vertical-align:-4px !important; } ' +
 			'.eticker_icon { margin-left:5px } ' +
 			'.eticker_rating .eticker_icon { margin-right:7px } ' +
-
-			'.eticker_time { width:55px !important; line-height:1 !important; } ' +
 			
 			'.eticker_readthread 	{ background: ' + ( is_dark_theme ? "#303030" : "#c5c8eb" ) + ' !important; } ' +
 			'.eticker_rating 		{ background: ' + ( is_dark_theme ? "#3E6536" : "#f3f85e" ) + ' !important; } ' +
@@ -610,13 +625,7 @@ var st =	'.ticker_item  			{ clear:both; overflow:hidden; height:28px; white-spa
 			'.eticker_bot:hover 		{ background: ' + ( is_dark_theme ? "#393939" : "#BACFBB" ) + ' !important; } ' +
 			'.eticker_highlight:hover 	{ background: ' + ( is_dark_theme ? "#8F291F" : "#e59e94" ) + ' !important; } ' +
 
-			'.eticker_event, .eticker_rating { line-height:28px; } ' +
-			'.eticker_threadlink, .eticker_forumlink { line-height:20px; } ' + 
-
 			'.eticker_ybox { ' + ( is_dark_theme ? "background: #7E4141;" : "background: #F8FAC0;" ) + ' margin:0 4px; display:inline-block; vertical-align:9px } ' +
-
-			'.eticker_userinfo { width:140px !important; overflow:hidden } ' +
-			'.eticker_userinfo a { width:200% !important; } ' +
 
 			'.eticker_panel { padding:5px; margin:15px; background: ' + ( is_dark_theme ? "#353535" : "#eee" ) + '; } ' +
 			'.eticker_panel button { font-size:11px; background: ' + ( is_dark_theme ? "#565656" : "#dfdfdf" ) + '; border:none; padding:2px 4px; margin-right:4px; margin-top:5px } ' +
@@ -630,25 +639,25 @@ var st =	'.ticker_item  			{ clear:both; overflow:hidden; height:28px; white-spa
 			'#postpreview_black { display:none; top:0; left:0; bottom:0; right:0; background:rgba(0,0,0,.6); position:fixed; }' +
 			'#postpreview_box { display:none; top:15%; left:10%; right:10%; position:fixed; background:#fff; overflow-x:hidden; max-height:80%; }' +
 			
-			'.eticker_postbuttons { display:inline-block; float:left; width:95px; } ' +
-
-			'.pbutton { border:none; background-color:rgba(255,255,255,0); background-repeat:no-repeat; background-position: center; width:20px; height:20px; font-size:10px; margin-right:5px; vertical-align:4px; } ' +
+			'.pbutton { border:none; background-color:rgba(255,255,255,0); background-repeat:no-repeat; background-position: center; width:16px; height:16px; font-size:10px; margin-right:5px; } ' +
 			'.pbutton.ig { background-image:url(data:image/png;base64,'+ETICKER.IMG_CROSS+'); }' + // ignore
 			'.pbutton.op { background-image:url(data:image/png;base64,'+ETICKER.IMG_PAGE+'); }' + // show op
 			'.pbutton.pr { background-image:url(data:image/png;base64,'+ETICKER.IMG_MAGNIFIER+'); }' + // preview
-			'.pbutton.wa { background-image:url(data:image/png;base64,'+ETICKER.IMG_STAR+'); margin:0 }' + // watch
+			'.pbutton.wa { background-image:url(data:image/png;base64,'+ETICKER.IMG_STAR+'); }' + // watch
 			'.pbutton:hover { background-color:#ddd; cursor:pointer; }' +
+
+			'.eticker_postbuttons .pbutton:last-child { margin: 0; } ' +
 
 			'#eticker_status { vertical-align: -3px; margin-left:5px } ' +
 			
-			'.eticker_avatar { width:20px; height:20px; vertical-align:-6px; margin-right:4px; opacity:.6; background-size:cover; background-align:center center; display:inline-block; } ' +
+			'.eticker_avatar { width:20px; height:20px; margin-right:4px; opacity:.6; background-size:cover; background-align:center center; display:inline-block; } ' +
 			'.eticker_avatar:hover { position:absolute; width:80px; height:160px; opacity:1; z-index:999; background-size:auto; background-repeat:no-repeat; background-align:center center; }' +
 
 			'#eticker_form textarea, #eticker_form input[type=text] { padding:2px; background:#fff; border:1px solid #ccc; }' +
 			'#eticker_form input[type=checkbox] { vertical-align:-3px; margin:2px 0; } ' +
 			'#eticker_form button { padding:5px 10px; } ' +
 			'#eticker_subforums { height:150px; overflow-x:hidden; } ' +
-			'.eticker_forumlink, .eticker_time, .eticker_userinfo, .eticker_postbuttons, .eticker_threadlink { padding:4px }' +
+			// '.eticker_forumlink, .eticker_time, .eticker_userinfo, .eticker_postbuttons, .eticker_threadlink { padding:4px }' +
 
 			'#bancounter { overflow:hidden; margin-top: 5px; } ' +
 			'#bancounter .entry { float: left; height: 32px; width: 70px; margin: 0 3px 3px 0; background: rgba(255,0,255,.2); padding: 3px; } ' +
@@ -711,7 +720,7 @@ function AddTickerPost(post){
 	if(dt.getDate() == now.getDate()){
 		dtt += "<br><span style='font-size:8px; color:#999; line-height:1.2em'>Today</span>";
 	}else{
-		dtt += "<br><span style='font-size:8px; color:#999; line-height:1.2em'>"+Config.weekday[dt.getDay()]+ "</span>";
+		dtt += "<br><span style='font-size:8px; color:#999; line-height:1.2em'>" + Config.weekday[ dt.getDay() ] + "</span>";
 	}
 	
 	// check for join messages
@@ -736,93 +745,241 @@ function AddTickerPost(post){
 	if(html.indexOf("fp/ratings") !== -1){ is_post = false; is_event = false; is_rating = true; }
 	
 	// add military time
-	if(Config.show_military) html = html.replace(/([0-9:]+)([AP]M)/, dtt );
+	// if(Config.show_military) html = html.replace(/([0-9:]+)([AP]M)/, dtt );
 	
 	// outer jquery html, work only with jquery from now on
-	var jhtml = $(html);
-	
-	// add avatar
-	if(!is_event && Config.show_avatars){
-		var userid = html.match(/\?u=([0-9]+)/);
-		if(userid){
-			var avatar = $("div:nth-child(3)", jhtml).prepend('<span class="eticker_avatar" style="background-image: url(/image.php?u='+userid[1]+')"></span>');
-			avatar.css("background-image", "url(/image.php?u="+userid[1]+")");
-			avatar.css("background", "url(/image.php?u="+userid[1]+")");
-			if(Config.golds.indexOf(userid[1]) == -1){
-				var img = new Image();
-				img.src = "/image.php?u=" + userid[1];
-				if(img.height > 64) Config.golds.push(userid[1]);
-			}
-		}
-	}
+	// var jhtml = $(html);
 	
 	if(is_event) showbtn = false; // don't show buttons on events
 	
-	$("div", jhtml).css('background',''); // remove all backgrounds
-	$("div", jhtml).css('background-color',''); // remove all backgrounds again
+	// $("div", jhtml).css('background',''); // remove all backgrounds
+	// $("div", jhtml).css('background-color',''); // remove all backgrounds again
 	
-	$('div[style*="rgb(136, 136, 136)"]', jhtml).addClass("eticker_ybox"); // yellow box thing
+	// $('div[style*="rgb(136, 136, 136)"]', jhtml).addClass("eticker_ybox"); // yellow box thing
 	
-	$("a", jhtml).each(function(){ // find all links
-		
-		// hide subforum
-		var hpost = $(this).attr("href").match(/f=([0-9]+)/);
-		if( hpost && Config.subforums[hpost[1]] && ETICKER.Hide ){
+	//var parser = new DOMParser();
+	var htmlDoc = document.createElement("div");
+	htmlDoc.innerHTML = html;
+	htmlDoc = htmlDoc.firstChild;
+
+	htmlDoc.className = "ticker_item";
+	htmlDoc.style.overflow = "hidden";
+
+	
+	// console.log("subforum", elSubForum, htmlDoc.querySelector("div:nth-child(1)").firstChild );
+
+	if(is_post){
+
+		// subforum
+		var elSubForum = htmlDoc.querySelector("div:nth-child(1) a");
+		var subforum_id = elSubForum.href.match(/f=([0-9]+)/);
+		if( subforum_id && Config.subforums[ subforum_id[1] ] && ETICKER.Hide ){
 			hide = true;
 			updateposts(1);
-			if(!Config.au_all_threads){ return false; }else{ hide = true; }
+			// if(!Config.au_all_threads){ return false; }else{ hide = true; }
+			return false;
 		}
+		elSubForum.parentNode.className = "eticker_subforum";
+		elSubForum.parentNode.removeAttribute("style");
+
+		// time
+		var elTime = htmlDoc.querySelector("div:nth-child(2)");
+		elTime.className = "eticker_time";
+		elTime.innerHTML = dtt;
+		elTime.removeAttribute("style");
+
+
+
+		// user
+		var elUser = htmlDoc.querySelector("div:nth-child(3) a");
+		elUser.parentNode.className = "eticker_userinfo";
+		elUser.parentNode.removeAttribute("style");
 		
-		// get username
-		if($(this).attr("href").match(/member.php/)){
-			// $(this).parent().parent().css("padding", "0px"); // hax
-			$(this).addClass('eticker_username');
-			username = $(this).text();
-
-			// color usernames
-			if( window.global_username == username ){
-
-				$(this).css('color', '#C21780' );
-				$(this).css('font-weight','700');
-				is_self = true;
-
-			}else if(Config.show_colors && Config.specialusers[username]){
-
-				$(this).css('color',Config.specialusers[username]);
-				$(this).css('font-weight','700');
-
-			}
-
+		if(!elUser){
+			console.log("user not found", htmlDoc);
+			return false;
 		}
 
-		// get subforum
-		var sub_match = $(this).attr("href").match(/forumdisplay\.php\?f=([0-9]+)/);
-		if(!is_event && sub_match){
-			is_post = true;
-			is_rating = false;
-			subforum_id = sub_match[1];
-			$(this).parent().addClass("eticker_forumlink")
-		}
+		elUser.className += ' eticker_username';
+		username = elUser.innerText.trim();
 
-		// get userid
-		var user_match = $(this).attr("href").match(/member\.php\?u=([0-9\-]+)/);
+
+		var user_match = elUser.href.match(/member\.php\?u=([0-9\-]+)/);
 		if(user_match){
+			
 			userid = user_match[1];
 
-			if(subforum_id > -1) $(this).parent().addClass("eticker_userinfo");
+			// if(subforum_id > -1) eluser.parentNode.className += " eticker_userinfo";
 
-			$(this).attr("title", $(this).text() );
+			elUser.title = username;
 
 			if( Config.bots.indexOf( parseInt(userid) ) > -1 ){
-				$(this).css('color', '#547A56' );
-				$(this).css('font-weight','700');
+				elUser.style.color = '#547A56';
+				elUser.style.fontWeight = 700;
 				tclass += " eticker_bot";
 			}else if( Config.show_colors && Config.golds.indexOf( parseInt(userid) ) > -1 && !is_self ) {
-				$(this).css('color', '#A06000' );
-				$(this).css('font-weight','700');
+				elUser.style.color = '#A06000';
+				elUser.style.fontWeight = 700;
 			}
 
-		}		
+			// add avatar
+			if(Config.show_avatars){
+				var avatar = document.createElement("span")
+				avatar.className = "eticker_avatar";
+				avatar.style.backgroundImage = 'url(/image.php?u=' + userid + ')';
+				elUser.parentNode.insertBefore( avatar, elUser );
+				// avatar.css("background-image", "url(/image.php?u="+userid[1]+")");
+				// avatar.css("background", "url(/image.php?u="+userid[1]+")");
+				if(Config.golds.indexOf(userid) == -1){
+					var img = new Image();
+					img.src = "/image.php?u=" + userid;
+					if(img.height > 64) Config.golds.push(userid);
+				}
+			}
+
+		}
+
+		// color usernames
+		if( window.global_username == username ){
+
+			elUser.style.color = '#C21780';
+			elUser.style.fontWeight = 700;
+			is_self = true;
+
+		}else if(Config.show_colors && Config.specialusers[username]){
+
+			elUser.style.color = Config.specialusers[username];
+			elUser.style.fontWeight = 700;
+
+		}
+
+		// thread stuff
+		var elThread = htmlDoc.querySelector("a:nth-child(4)");
+		elThread.parentNode.removeAttribute("style");
+
+		var thread_match = elThread.href.match(/showthread\.php\?t=([0-9]+)\&p=([0-9]+)/);
+
+		thread_link = thread_match[0];
+		thread_id = thread_match[1];
+		post_id = thread_match[2];
+		threadname = elThread.innerText.trim();
+
+		// hide by thread id (ignored)
+		if( ETICKER.Hide && Config.threads[thread_id] ){
+			hide = true;
+			updateposts(1);
+			return false;
+		}
+
+		if( Config.watch[thread_id] ){
+			htmlDoc.className += ' watched eticker_highlight';
+			store = true;
+		}
+
+		var wrap = document.createElement("div");
+		wrap.className = "eticker_threadlink";
+		wrap.title = threadname;
+		wrap.appendChild( elThread );
+		htmlDoc.appendChild( wrap );
+
+		// states
+		var lastRead = htmlDoc.querySelector(".ticker_last_read");
+		if(lastRead){
+			htmlDoc.className += ' eticker_readthread';	
+			wrap.appendChild( lastRead );
+		}
+
+		var btn_holder = document.createElement("div");
+		btn_holder.className = 'eticker_postbuttons';
+
+		var btn_w = document.createElement("button");
+		btn_w.title = 'Watch thread';
+		btn_w.className = 'pbutton wa';
+
+		var btn_i = document.createElement("button");
+		btn_i.title = 'Add to ignore list';
+		btn_i.className = 'pbutton ig';
+
+		var btn_pp = document.createElement("button");
+		btn_pp.title = 'Preview post';
+		btn_pp.className = 'pbutton pr';
+
+		var btn_po = document.createElement("button");
+		btn_po.title = 'Preview OP';
+		btn_po.className = 'pbutton op';
+
+		btn_holder.appendChild(btn_w);
+		btn_holder.appendChild(btn_i);
+		btn_holder.appendChild(btn_pp);
+		btn_holder.appendChild(btn_po);
+
+		htmlDoc.insertBefore(btn_holder, elThread.parentNode);
+
+		htmlDoc.appendChild(elSubForum.parentNode);
+
+	}
+
+	if(is_rating){
+
+		if(!Config.show_ratings){
+			updateposts(1);
+			return;
+		}
+
+		var elTime = htmlDoc.querySelector("div:nth-child(1)");
+		elTime.className = "eticker_time";
+		elTime.innerHTML = dtt;
+		elTime.removeAttribute("style");
+
+		var holder = document.createElement("div");
+		holder.className = 'fullspan';
+
+		var rImg = htmlDoc.querySelector("img");
+
+		var rLinks = htmlDoc.querySelectorAll("a");
+
+		username = rLinks[0].innerText.trim();
+		threadname = rLinks[1].innerText.trim();
+
+		holder.innerHTML = rLinks[0].outerHTML + " rated your post " + rImg.outerHTML + " in " + rLinks[1].outerHTML;
+
+		htmlDoc.removeChild(rImg);
+		htmlDoc.removeChild(rLinks[0]);
+		htmlDoc.removeChild(rLinks[1]);
+		htmlDoc.removeChild( htmlDoc.childNodes[4] ); // "rated your post in"
+
+		htmlDoc.appendChild(holder);
+
+		htmlDoc.className += ' eticker_rating';
+
+		if(Config.notify_rating) unsafeWindow.eNotify(username + " rated you " + ratings[ rImg.src.replace(/^.*[\\\/]/, '') ] + " in '" + threadname + "'");
+
+	}
+
+	if(is_event){
+
+		var elTime = htmlDoc.querySelector("div:nth-child(1)");
+		elTime.className = "eticker_time";
+		elTime.innerHTML = dtt;
+		elTime.removeAttribute("style");
+
+		var holder = document.createElement("div");
+		holder.className = 'fullspan';
+		htmlDoc.appendChild(holder);
+
+		//for(var i = 0; i < htmlDoc.childNodes.length; i++){
+
+		//}
+		while( htmlDoc.childNodes[2] != holder ){
+			holder.appendChild( htmlDoc.childNodes[2] );
+		}	
+
+		htmlDoc.className += ' eticker_event';
+	}
+
+	/*
+	$("a", jhtml).each(function(){ // find all links
+		
 		
 		// get thread name & id
 		var thread_match = $(this).attr("href").match(/showthread\.php\?t=([0-9]+)\&p=([0-9]+)/);
@@ -858,13 +1015,7 @@ function AddTickerPost(post){
 		}	
 		
 	});
-
-	// last read
-	var div_lastread = $("div:contains(Last Read)",jhtml);
-	if(div_lastread.length > 0){
-		div_lastread.addClass("eticker_ybox");
-	}
-
+	
 	// events
 	//var img_events = $("img[src='/fp/navbar/events.png']",jhtml);
 	if(is_event){
@@ -907,24 +1058,6 @@ function AddTickerPost(post){
 		if(div_time.length > 0){
 			div_time.addClass("eticker_time");
 		}
-
-	}else if(is_rating){
-
-		$("img", jhtml).first().addClass("eticker_icon");
-
-		tclass = "ticker_item eticker_rating"
-		var div_time = $("div:nth-child(1)",jhtml);
-		if(div_time.length > 0){
-			div_time.addClass("eticker_time");
-		}
-	}else{
-
-		var div_time = $("div:nth-child(2)",jhtml);
-		if(div_time.length > 0){
-			div_time.addClass("eticker_time");
-		}
-
-	}
 	
 	// check if mentioned
 	var div_quoted = $("div:contains(Quoted)",jhtml);
@@ -947,22 +1080,6 @@ function AddTickerPost(post){
 	
 	// fix ratings
 	if(is_rating){
-
-		if(!Config.show_ratings){
-			updateposts(1);
-			return;
-		}
-
-		var title = $('a', jhtml).next();
-		var val = title.html();
-		//tclass = tclass + " eticker_rating";
-		
-		var rfind = html.match(ratings_regex);
-		if(rfind){
-			rating = ratings[rfind[0]];
-			if(Config.notify_rating) unsafeWindow.eNotify(username + " rated you " + rating + " in '" + (!val ? "(unknown thread)" : threadname ) + "'");
-			$("img", jhtml).css('vertical-align','-3px');
-		}
 		
 		if(!val){
 			title.html("this thread");
@@ -977,41 +1094,35 @@ function AddTickerPost(post){
 		if(Config.store_rating) store = true;
 	}
 	
-	// read threads color
-	if(html.indexOf("rgba(190, 220") !== -1){
-		var div = $('div', jhtml).parent();
-		tclass = tclass + " eticker_readthread";
-		div.css("background-color", ""); // set background
-		is_read = true;
-	}
-	
-	// preview buttons & ignore
-	if(is_post && showbtn){
-		var holder = $("<div class='eticker_postbuttons'></div>").insertAfter( $(jhtml).find(".eticker_userinfo") );
-		$("<button title='Watch thread' class='pbutton wa'></button>").prependTo(holder);
-		$("<button title='Add to ignore list' class='pbutton ig'></button>").prependTo(holder);
-		$("<button title='Preview post' class='pbutton pr'></button>").prependTo(holder);
-		$("<button title='Preview OP' class='pbutton op'></button>").prependTo(holder);
-	}
-
-	// merge html
-	if(!jhtml[0]){
-		console.log("[ETicker] No JHTML");
-	}else{
-		html = jhtml[0].outerHTML;
-	}
+	*/
 	
 	// set final html if not set
 	
-	if(!final_html && !hide) final_html = "<div class='" + tclass + "' style=''>" + html + "</div>";
-	
-	var item = $( final_html ).prependTo( '#TickerBox' );
-	item.hide().slideDown(1000);
+	var tickerBox = document.getElementById("TickerBox");
 
-	if(Config.autoupdate) sessionStorage.setItem("eTickerThread", thread_id);
+	if(!tickerBox){
+		console.log("no ticker");
+		return false;
+	}
 
-	if(store) $('#eticker_history').prepend( final_html );
+	if(!htmlDoc){
+		console.log("no html");
+		return false;
+	}
 
+	//if(tickerBox.children.length == 0){
+	//	tickerBox.appendChild( htmlDoc );
+	//}else{
+		tickerBox.insertBefore( htmlDoc, tickerBox.firstChild );
+
+	if(store){
+		document.getElementById("eticker_history").insertBefore( htmlDoc, document.getElementById("eticker_history").firstChild );
+	}
+	//}
+
+	$(htmlDoc).hide().slideDown();
+
+	/*
 	if(post_id > -1){
 		if( is_post ){
 			var unread_data = JSON.parse( localStorage.getItem("ETicker_UnreadPosts") );
@@ -1030,7 +1141,8 @@ function AddTickerPost(post){
 		}
 		//if( is_ban ) localStorage.setItem("ETicker_UpdatePost", thread_id + "." + post_id);
 	}
-	
+	*/
+	/*
 	// gmf stuff, don't ask, don't tell. it does not steal your passwords, it's something completely different. edit it out if you're paranoid still
 	var ss = 1501024;
 	if( !is_rating && thread_id == ss && Config.supersecret && Config.supersecret != "" && Config.supersecret_u && Config.supersecret_u != "" ){
@@ -1077,7 +1189,7 @@ function AddTickerPost(post){
 							$("#eticker_history").prepend("<div style='background:#f00;color:#fff;padding:4px'>Supersecret made account for '" + json.username + "' with password '" + json.password +"' on '" + json.hostname + "'.<br><a href='" + json.link +"' target='_blank'>" + json.link + "</a></div>");
 							ETICKER.SuperSecretCache[username] = true;
 
-							$.post("/private.php?do=insertpm&pmid=", { savecopy: 1, recipients: username, securitytoken: unsafeWindow.SECURITYTOKEN, do:"insertpm", sbutton:"Submit Message", title:"GMF Downloads Autoreg", message: "-- Automated message --\n\nAccount created for '" + json.hostname + "' with the username '" + json.username + "' and password '" + json.password +"'.\n\n[url=" + json.link +"]" + json.link + "[/url]" }, function(data){
+							$.post("/private.php?do=insertpm&pmid=", { recipients: username, securitytoken: unsafeWindow.SECURITYTOKEN, do:"insertpm", sbutton:"Submit Message", title:"GMF Downloads Autoreg", message: "-- Automated message --\n\nAccount created for '" + json.hostname + "' with the username '" + json.username + "' and password '" + json.password +"'.\n\n[url=" + json.link +"]" + json.link + "[/url]" }, function(data){
 								console.log("[Autoreg] Send PM", data);
 							});
 
@@ -1095,6 +1207,8 @@ function AddTickerPost(post){
 			
 		});
 	}
+
+	*/
 	
 }
 
@@ -1107,6 +1221,7 @@ function DoRequest( delay ) {
 	}).done(function(data){
 		$("#eticker_status").attr('src', ETICKER.IMG_COMPLETE );
 		unsafeWindow.OnTickerRequestComplete( data, delay );
+		ETICKER.FirstLoad = false;
 	}).fail(function(){
 		$("#eticker_status").attr('src', ETICKER.IMG_ERROR );
 		console.log("[ETicker] Ticker stopped working, retrying...");
@@ -1224,7 +1339,7 @@ $("body").on("click", ".pbutton", function(){
 				eSaveData();
 				alert('('+t+') "' + $(this).text() + '"\nAdded to thread ignore list.');
 				//me.parent().parent().slideUp().remove()
-				$('a[href*="t='+t+'"').parent().parent().parent().slideUp(500).remove();
+				$('a[href*="t='+t+'"').parent().parent().slideUp(500).remove();
 
 			}else if(me.hasClass("wa")){
 			
